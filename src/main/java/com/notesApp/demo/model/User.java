@@ -24,8 +24,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role; // Example: ROLE_USER, ROLE_ADMIN
+    private Role role; // Example: ROLE_USER, ROLE_ADMIN
 
     // One user -> many notes
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
