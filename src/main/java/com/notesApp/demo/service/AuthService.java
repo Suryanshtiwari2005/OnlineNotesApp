@@ -36,7 +36,7 @@ public class AuthService {
             throw new RuntimeException("Username already exists");
         }
 
-1
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(Role.ROLE_USER);
         userRepository.save(user);
