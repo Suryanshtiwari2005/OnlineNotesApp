@@ -4,9 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,40 +15,51 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity
+@EnableWebSecurity
 public class SecurityConfig {
-
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
-    // 🔹 Password encoder (hashes passwords using BCrypt)
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    // 🔹 Password Encoder Bean
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // 🔹 Authentication manager (used by AuthController for login)
+    // 🔹 Authentication Provider
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
-    // 🔹 Main security configuration
+    // 🔹 Authentication Manager Bean
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    // 🔹 Security Filter Chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // No CSRF for stateless APIs
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT = stateless
+                .csrf(csrf -> csrf.disable())  // Disable CSRF for REST APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()  // Allow register/login
-                        .requestMatchers("/error").permitAll()
-                        .anyRequest().authenticated() // Everything else needs JWT
+                        .requestMatchers("/", "/index.html", "/*.css", "/*.js").permitAll() // Allow Static Files
+                        .requestMatchers("/api/auth/**").permitAll()  // ✅ Allow register & login
+                        .anyRequest().authenticated()  // All other requests need authentication
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .userDetailsService(customUserDetailsService);
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)  // Stateless JWT
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

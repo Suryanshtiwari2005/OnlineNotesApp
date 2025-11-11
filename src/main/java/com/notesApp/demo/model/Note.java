@@ -1,5 +1,6 @@
 package com.notesApp.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -29,6 +30,7 @@ public class Note {
     // Many notes -> one user
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @PrePersist

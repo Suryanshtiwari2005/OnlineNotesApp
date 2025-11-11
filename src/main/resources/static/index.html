@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Notes App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+
+<!-- Login/Register Section -->
+<div id="authSection" class="container mx-auto px-4 py-16">
+  <div class="max-w-md mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6">
+      <h1 class="text-3xl font-bold text-white text-center">📝 Notes App</h1>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginForm" class="p-8">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-800">Welcome Back</h2>
+      <form onsubmit="login(event)">
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+          <input type="text" id="loginUsername" required
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+          <input type="password" id="loginPassword" required
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <button type="submit"
+                class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
+          Login
+        </button>
+      </form>
+      <p class="text-center mt-4 text-gray-600">
+        Don't have an account?
+        <a href="#" onclick="showRegister()" class="text-blue-600 font-semibold hover:underline">Register</a>
+      </p>
+    </div>
+
+    <!-- Register Form -->
+    <div id="registerForm" class="p-8 hidden">
+      <h2 class="text-2xl font-semibold mb-6 text-gray-800">Create Account</h2>
+      <form onsubmit="register(event)">
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+          <input type="text" id="registerUsername" required minlength="3"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+          <input type="password" id="registerPassword" required minlength="6"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <button type="submit"
+                class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200">
+          Register
+        </button>
+      </form>
+      <p class="text-center mt-4 text-gray-600">
+        Already have an account?
+        <a href="#" onclick="showLogin()" class="text-blue-600 font-semibold hover:underline">Login</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Notes Dashboard -->
+<div id="notesSection" class="hidden">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-6 shadow-lg">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-3xl font-bold">📝 My Notes</h1>
+      <div class="flex items-center gap-4">
+        <span id="usernameDisplay" class="font-semibold"></span>
+        <button onclick="logout()"
+                class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition duration-200">
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Note Section -->
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8 mb-8">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800">Create New Note</h2>
+      <form onsubmit="createNote(event)">
+        <div class="mb-4">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+          <input type="text" id="noteTitle" required
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 text-sm font-bold mb-2">Content</label>
+          <textarea id="noteContent" required rows="5"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+        <button type="submit"
+                class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
+          Create Note
+        </button>
+      </form>
+    </div>
+
+    <!-- Notes List -->
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800">Your Notes</h2>
+      <div id="notesList" class="grid gap-6">
+        <!-- Notes will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Edit Note</h2>
+    <form onsubmit="updateNote(event)">
+      <input type="hidden" id="editNoteId">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Title</label>
+        <input type="text" id="editNoteTitle" required
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Content</label>
+        <textarea id="editNoteContent" required rows="5"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      </div>
+      <div class="flex gap-4">
+        <button type="submit"
+                class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
+          Update
+        </button>
+        <button type="button" onclick="closeEditModal()"
+                class="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition duration-200">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const API_URL = '/api';
+  let token = localStorage.getItem('token') || '';
+  let username = localStorage.getItem('username') || '';
+
+  // Check if user is already logged in
+  if (token) {
+      showNotes();
+  }
+
+  function showRegister() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.remove('hidden');
+  }
+
+  function showLogin() {
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('loginForm').classList.remove('hidden');
+  }
+
+  async function register(e) {
+      e.preventDefault();
+      const username = document.getElementById('registerUsername').value;
+      const password = document.getElementById('registerPassword').value;
+
+      try {
+          const response = await fetch(`${API_URL}/auth/register`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, password })
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+              alert('Registration successful! Please login.');
+              showLogin();
+          } else {
+              alert(data.message || 'Registration failed');
+          }
+      } catch (error) {
+          alert('Error: ' + error.message);
+      }
+  }
+
+  async function login(e) {
+      e.preventDefault();
+      const usernameInput = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+          const response = await fetch(`${API_URL}/auth/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: usernameInput, password })
+          });
+
+          const data = await response.json();
+          if (response.ok && data.token) {
+              token = data.token;
+              username = usernameInput;
+              localStorage.setItem('token', token);
+              localStorage.setItem('username', username);
+              showNotes();
+          } else {
+              alert(data.message || 'Login failed');
+          }
+      } catch (error) {
+          alert('Error: ' + error.message);
+      }
+  }
+
+  function logout() {
+      token = '';
+      username = '';
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      document.getElementById('notesSection').classList.add('hidden');
+      document.getElementById('authSection').classList.remove('hidden');
+      showLogin();
+  }
+
+  function showNotes() {
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('notesSection').classList.remove('hidden');
+      document.getElementById('usernameDisplay').textContent = username;
+      loadNotes();
+  }
+
+  async function loadNotes() {
+      try {
+          const response = await fetch(`${API_URL}/notes`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (response.ok) {
+              const notes = await response.json();
+              displayNotes(notes);
+          } else {
+              alert('Failed to load notes');
+          }
+      } catch (error) {
+          alert('Error: ' + error.message);
+      }
+  }
+
+  function displayNotes(notes) {
+      const notesList = document.getElementById('notesList');
+      if (notes.length === 0) {
+          notesList.innerHTML = '<p class="text-gray-500 text-center py-8">No notes yet. Create your first note!</p>';
+          return;
+      }
+
+      notesList.innerHTML = notes.map(note => `
+          <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 p-6 border-l-4 border-blue-500">
+              <div class="flex justify-between items-start mb-3">
+                  <h3 class="text-xl font-bold text-gray-800">${note.title}</h3>
+                  <div class="flex gap-2">
+                      <button onclick="openEditModal(${note.id}, '${note.title.replace(/'/g, "\\'")}', '${note.content.replace(/'/g, "\\'").replace(/\n/g, '\\n')}')"
+                          class="text-blue-600 hover:text-blue-800 font-semibold">
+                          ✏️ Edit
+                      </button>
+                      <button onclick="deleteNote(${note.id})"
+                          class="text-red-600 hover:text-red-800 font-semibold">
+                          🗑️ Delete
+                      </button>
+                  </div>
+              </div>
+              <p class="text-gray-700 whitespace-pre-wrap">${note.content}</p>
+              <div class="mt-4 text-sm text-gray-500">
+                  <span>Created: ${new Date(note.createdAt).toLocaleDateString()}</span>
+              </div>
+          </div>
+      `).join('');
+  }
+
+  async function createNote(e) {
+      e.preventDefault();
+      const title = document.getElementById('noteTitle').value;
+      const content = document.getElementById('noteContent').value;
+
+      try {
+          const response = await fetch(`${API_URL}/notes`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ title, content })
+          });
+
+          if (response.ok) {
+              document.getElementById('noteTitle').value = '';
+              document.getElementById('noteContent').value = '';
+              loadNotes();
+              alert('Note created successfully!');
+          } else {
+              alert('Failed to create note');
+          }
+      } catch (error) {
+          alert('Error: ' + error.message);
+      }
+  }
+
+  function openEditModal(id, title, content) {
+      document.getElementById('editNoteId').value = id;
+      document.getElementById('editNoteTitle').value = title;
+      document.getElementById('editNoteContent').value = content;
+      document.getElementById('editModal').classList.remove('hidden');
+  }
+
+  function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+  }
+
+  async function updateNote(e) {
+      e.preventDefault();
+      const id = document.getElementById('editNoteId').value;
+      const title = document.getElementById('editNoteTitle').value;
+      const content = document.getElementById('editNoteContent').value;
+
+      try {
+          const response = await fetch(`${API_URL}/notes/${id}`, {
+              method: 'PUT',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ title, content })
+          });
+
+          if (response.ok) {
+              closeEditModal();
+              loadNotes();
+              alert('Note updated successfully!');
+          } else {
+              alert('Failed to update note');
+          }
+      } catch (error) {
+          alert('Error: ' + error.message);
+      }
+  }
+
+  async function deleteNote(id) {
+      if (!confirm('Are you sure you want to delete this note?')) return;
+
+      try {
+          const response = await fetch(`${API_URL}/notes/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          if (response.ok) {
+              loadNotes();
+              alert('Note deleted successfully!');
+          } else {
+              alert('Failed to delete note');
+          }
+      } catch (error) {
+          alert('Error: ' + error.message);
+      }
+  }
+</script>
+</body>
+</html>>
